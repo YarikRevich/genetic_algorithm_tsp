@@ -1,0 +1,12 @@
+data:
+  - name: "Kyiv"
+    x: 100
+    y: 100
+  - name: "Zaporizhzhya"
+    x: 500
+    y: 400
+random:
+  canvas:
+    width: 1000
+    height: 1000
+  names: ["Kyiv", "Zaporizhzhya", "Dnipro", "Mariupol"]
