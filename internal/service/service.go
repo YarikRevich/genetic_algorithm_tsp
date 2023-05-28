@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"university/generic_algorithm_project/internal/config"
 	"university/generic_algorithm_project/internal/entity"
+	"university/generic_algorithm_project/internal/tools"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -32,50 +33,52 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 	return graph
 }
 
-func GetPathToPoint() {
+func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
+	// geneticAlgorithm := core.NewGeneticAlgorithm()
 
+	generations := config.GetGenerations()
+
+	training := entity.NewTrainingWithGeneration(
+		tools.GetData(
+			config.GetData(),
+			config.GetRandomNames(),
+			config.IsRandom(),
+		), generations)
+
+	// fmt.Println(training.Iterations)
+	for _, v := range training.Iterations {
+		fmt.Println(v.Path)
+	}
+
+	// for i := 0; i < generations; i++ {
+	// 	training = geneticAlgorithm.Train(training)
+	// }
+
+	var graphNodes []opts.GraphNode
+
+	iteration := training.GetFittest()
+	for _, v := range iteration.Path {
+		graphNodes = append(graphNodes, opts.GraphNode{
+			Name: v.Name,
+			X:    v.X,
+			Y:    v.Y,
+		})
+	}
+
+	var graphLinks []opts.GraphLink
+	for i := 0; i < len(iteration.Path); i++ {
+		var target string
+		if i+1 < len(iteration.Path) {
+			target = iteration.Path[i+1].Name
+		} else {
+			target = iteration.Path[0].Name
+		}
+
+		graphLinks = append(graphLinks, opts.GraphLink{
+			Source: iteration.Path[0].Name,
+			Target: target,
+		})
+	}
+
+	return graphNodes, graphLinks
 }
-
-// # Python3 program to implement traveling salesman
-// # problem using naive approach.
-// from sys import maxsize
-// from itertools import permutations
-// V = 4
-
-// # implementation of traveling Salesman Problem
-// def travellingSalesmanProblem(graph, s):
-
-// 	# store all vertex apart from source vertex
-// 	vertex = []
-// 	for i in range(V):
-// 		if i != s:
-// 			vertex.append(i)
-
-// 	# store minimum weight Hamiltonian Cycle
-// 	min_path = maxsize
-// 	next_permutation=permutations(vertex)
-// 	for i in next_permutation:
-
-// 		# store current Path weight(cost)
-// 		current_pathweight = 0
-
-// 		# compute current path weight
-// 		k = s
-// 		for j in i:
-// 			current_pathweight += graph[k][j]
-// 			k = j
-// 		current_pathweight += graph[k][s]
-
-// 		# update minimum
-// 		min_path = min(min_path, current_pathweight)
-
-// 	return min_path
-
-// # Driver Code
-// if __name__ == "__main__":
-
-// 	# matrix representation of graph
-// 	graph = [[0, 10, 15, 20], [10, 0, 35, 25],
-// 			[15, 35, 0, 30], [20, 25, 30, 0]]
-// 	s = 0
-// 	print(travellingSalesmanProblem(graph, s))

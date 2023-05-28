@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math/rand"
 	"university/generic_algorithm_project/internal/config"
 	"university/generic_algorithm_project/internal/entity"
@@ -48,6 +49,7 @@ func (ga *GeneticAlgorithm) getCrossover(src, dst *entity.Iteration) *entity.Ite
 	j := 0
 	for i := 0; i < len(src.Path); i++ {
 		var exist bool
+
 		for _, v := range result.Path {
 			if v == dst.Path[i] {
 				exist = true
@@ -82,7 +84,7 @@ func (ga *GeneticAlgorithm) getTournamentSelection(src *entity.Training) *entity
 
 	for i := 0; i < len(src.Iterations); i++ {
 		r := int(rand.Float64() * float64(len(src.Iterations)))
-		trainingTemp.Iterations = append(trainingTemp.Iterations[:i], src.Iterations[r])
+		trainingTemp.Iterations = append(trainingTemp.Iterations, src.Iterations[r])
 	}
 
 	return trainingTemp.GetFittest()
@@ -95,7 +97,10 @@ func (ga *GeneticAlgorithm) Train(src *entity.Training) *entity.Training {
 		result.Iterations = append(result.Iterations, src.GetFittest())
 	}
 
+	fmt.Println(ga.getTournamentSelection(src), ga.getTournamentSelection(src))
+
 	for i := 0; i < len(src.Iterations)-1; i++ {
+
 		mutation := ga.getMutation(ga.getCrossover(
 			ga.getTournamentSelection(src),
 			ga.getTournamentSelection(src)))
