@@ -20,7 +20,7 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 
 	graphRenderer := service.GetGraphRenderer(tools.GetCanvas())
 
-	graphNodes, graphLinks := service.GetGraphSeries()
+	graphNodes, graphLinks, fitness := service.GetGraphSeries()
 	graphRenderer.AddSeries("Cities", graphNodes, graphLinks, charts.WithGraphChartOpts(
 		opts.GraphChart{
 			Layout: "none",
@@ -38,7 +38,7 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 	page.AddCharts(graphRenderer)
 
 	gaugeRenderer := service.GetGaugeRenderer()
-	gaugeRenderer.AddSeries("Training result", service.GetGaugeSeries(100))
+	gaugeRenderer.AddSeries("Training result", service.GetGaugeSeries(fitness))
 
 	page.AddCharts(gaugeRenderer)
 

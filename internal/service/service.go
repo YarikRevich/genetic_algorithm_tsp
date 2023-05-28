@@ -12,6 +12,7 @@ import (
 	"university/generic_algorithm_project/internal/entity"
 	"university/generic_algorithm_project/internal/tools"
 
+	"github.com/barkimedes/go-deepcopy"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
@@ -23,7 +24,7 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 	graph.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
 			Title:    "TSP",
-			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nGenerations: %d\n\nAuthor: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType(), config.GetGenerations()),
+			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nGenerations: %d\n\nRandom seek: %d\n\nAuthor: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType(), config.GetGenerations(), tools.GetRandSeed()),
 		}),
 		charts.WithTooltipOpts(opts.Tooltip{
 			Trigger:   "none",
@@ -63,26 +64,36 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 	return graph
 }
 
-func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
+func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
 	geneticAlgorithm := core.NewGeneticAlgorithm()
 
 	generations := config.GetGenerations()
+
+	bestTraining := entity.NewTrainingWithGeneration(
+		tools.GetData(
+			config.GetData(),
+			config.GetRandomNames(),
+			config.IsRandom(),
+		))
 
 	training := entity.NewTrainingWithGeneration(
 		tools.GetData(
 			config.GetData(),
 			config.GetRandomNames(),
 			config.IsRandom(),
-		), generations)
+		))
 
 	for i := 0; i < generations; i++ {
 		training = geneticAlgorithm.Train(training)
+
+		if bestTraining.GetFittest().GetFitness() < training.GetFittest().GetFitness() {
+			bestTraining = deepcopy.MustAnything(training).(*entity.Training)
+		}
 	}
 
 	var graphNodes []opts.GraphNode
 
-	iteration := training.GetFittest()
-
+	iteration := bestTraining.GetFittest()
 	for _, v := range iteration.Path {
 		graphNodes = append(graphNodes, opts.GraphNode{
 			Name: v.Name,
@@ -92,6 +103,7 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
 	}
 
 	var graphLinks []opts.GraphLink
+
 	for i := 0; i < len(iteration.Path)-1; i++ {
 		graphLinks = append(graphLinks, opts.GraphLink{
 			Source: iteration.Path[i].Name,
@@ -99,7 +111,7 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
 		})
 	}
 
-	return graphNodes, graphLinks
+	return graphNodes, graphLinks, iteration.GetFitness()
 }
 
 func GetBarRenderer(canvas entity.Canvas) *charts.Bar {
@@ -107,22 +119,13 @@ func GetBarRenderer(canvas entity.Canvas) *charts.Bar {
 }
 
 func GetGaugeRenderer() *charts.Gauge {
-	gauge := charts.NewGauge()
-
-	// gauge.SetSeriesOptions(charts.With)
-
-	// gauge.AddSeries("ddd", []opts.GaugeData{{
-	// 	Name: "value", Value: 100,
-	// },
-	// })
-
-	return gauge
+	return charts.NewGauge()
 }
 
-func GetGaugeSeries(fitness int) []opts.GaugeData {
+func GetGaugeSeries(fitness float64) []opts.GaugeData {
 	return []opts.GaugeData{{
 		Name:  "Best fitness",
-		Value: fitness,
+		Value: fitness * 100000,
 	}}
 }
 

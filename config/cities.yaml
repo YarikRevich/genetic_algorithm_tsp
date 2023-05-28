@@ -1,12 +1,12 @@
 meta:
-  generations: 100
+  generations: 2000
   representation: "path"
   elitism: true
   crossover: 
     probability: 0.6
-    type: "PBC"
+    type: "OX"
   mutation:
-    probability: 0.4
+    probability: 0.1
     type: "inversion"
   view:
     history: 

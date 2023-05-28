@@ -47,7 +47,12 @@ const (
 	CROSSOVER_PBC = "PBC"
 )
 
-const RESULT_PATH = "/"
+const (
+	MUTATION_INVERSION     = "inversion"
+	MUTATION_TRANSPOSITION = "transposition"
+)
+
+const RESULT_PATH = "/result"
 
 func Init() {
 	flag.Parse()
@@ -80,6 +85,10 @@ func Init() {
 	}
 
 	mutationType = viper.GetString("meta.mutation.type")
+	if mutationType != MUTATION_INVERSION && mutationType != MUTATION_TRANSPOSITION {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.mutation.type"))
+	}
+
 	showHistory = viper.GetBool("meta.view.history.show")
 	historyDelay = viper.GetDuration("meta.view.history.delay")
 	if showHistory && historyDelay == 0 {

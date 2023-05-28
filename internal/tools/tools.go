@@ -12,6 +12,12 @@ import (
 	"university/generic_algorithm_project/internal/entity"
 )
 
+var randSeed = time.Now().Unix()
+
+func GetRandSeed() int64 {
+	return randSeed
+}
+
 func GetLocalServerURL(address string) string {
 	var url url.URL
 	url.Scheme = "http"

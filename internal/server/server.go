@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"university/generic_algorithm_project/internal/config"
 	"university/generic_algorithm_project/internal/handler"
 	readinessprobe "university/generic_algorithm_project/internal/readiness_probe"
@@ -32,7 +33,14 @@ func Run() {
 		log.Fatalln(err)
 	}
 
-	err = browser.OpenURL(tools.GetLocalServerURL(listener.Addr().String()))
+	address, err := url.Parse(tools.GetLocalServerURL(listener.Addr().String()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	address.Path = config.RESULT_PATH
+
+	err = browser.OpenURL(address.String())
 	if err != nil {
 		log.Fatalln(err)
 	}

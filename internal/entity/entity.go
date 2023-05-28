@@ -68,7 +68,7 @@ type Iteration struct {
 	Path []Point
 }
 
-func (it *Iteration) GetFitness() float64 {
+func (it Iteration) GetFitness() float64 {
 	var distance float64
 	for i := 0; i < len(it.Path); i++ {
 		src := it.Path[i]
@@ -111,10 +111,10 @@ func (t *Training) GetFittest() *Iteration {
 	return result
 }
 
-func NewTrainingWithGeneration(src []*ConfigDataModel, generations int) *Training {
+func NewTrainingWithGeneration(src []*ConfigDataModel) *Training {
 	result := new(Training)
 
-	for i := 0; i < generations; i++ {
+	for i := 0; i < len(src); i++ {
 		iteration := new(Iteration)
 
 		for _, v := range src {

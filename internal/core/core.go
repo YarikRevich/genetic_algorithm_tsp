@@ -9,11 +9,65 @@ import (
 type GeneticAlgorithm struct{}
 
 func (ga *GeneticAlgorithm) getCrossoverOX(src, dst *entity.Iteration) *entity.Iteration {
-	return nil
+	result := &entity.Iteration{
+		Path: src.Path[:],
+	}
+
+	unusedPositions := make(map[int]bool)
+
+	breakingPosition := rand.Intn(len(src.Path))
+	for i := 0; i < len(src.Path); i++ {
+		var exist bool
+		for _, v := range result.Path {
+			if v == dst.Path[i] {
+				exist = true
+			}
+		}
+
+		if !exist {
+			for unusedPositions[breakingPosition] {
+				breakingPosition = (breakingPosition + 1) % len(src.Path)
+			}
+			result.Path[breakingPosition] = dst.Path[i]
+			unusedPositions[breakingPosition] = true
+			breakingPosition = (breakingPosition + 1) % len(src.Path)
+		}
+	}
+
+	return result
 }
 
 func (ga *GeneticAlgorithm) getCrossoverCX(src, dst *entity.Iteration) *entity.Iteration {
-	return nil
+	result := &entity.Iteration{
+		Path: src.Path[:],
+	}
+
+	unusedPositions := make(map[int]bool)
+
+	startPoint := rand.Intn(len(src.Path))
+
+main:
+	for i := startPoint; i != startPoint; {
+		result.Path[i] = src.Path[i]
+		unusedPositions[i] = true
+
+		for q, v := range src.Path {
+			if v == dst.Path[i] {
+				i = q
+				continue main
+			}
+		}
+
+		i = -1
+	}
+
+	for i := 0; i < len(src.Path); i++ {
+		if !unusedPositions[i] {
+			result.Path[i] = dst.Path[i]
+		}
+	}
+
+	return result
 }
 
 func (ga *GeneticAlgorithm) getCrossoverPBC(src, dst *entity.Iteration) *entity.Iteration {
@@ -56,7 +110,7 @@ func (ga *GeneticAlgorithm) getCrossoverPBC(src, dst *entity.Iteration) *entity.
 	return result
 }
 
-func (ga *GeneticAlgorithm) getMutation(iteration *entity.Iteration) *entity.Iteration {
+func (ga *GeneticAlgorithm) getMutationInversion(iteration *entity.Iteration) *entity.Iteration {
 	result := &entity.Iteration{
 		Path: iteration.Path[:],
 	}
@@ -68,6 +122,23 @@ func (ga *GeneticAlgorithm) getMutation(iteration *entity.Iteration) *entity.Ite
 			result.Path[src], result.Path[dst] = result.Path[dst], result.Path[src]
 		}
 	}
+
+	return result
+}
+
+func (ga *GeneticAlgorithm) getMutationTransposition(iteration *entity.Iteration) *entity.Iteration {
+	result := &entity.Iteration{
+		Path: iteration.Path[:],
+	}
+
+	src := rand.Intn(len(iteration.Path))
+	dst := rand.Intn(len(iteration.Path))
+
+	for src == dst {
+		dst = rand.Intn(len(iteration.Path))
+	}
+
+	result.Path[src], result.Path[dst] = result.Path[dst], iteration.Path[src]
 
 	return result
 }
@@ -108,7 +179,16 @@ func (ga *GeneticAlgorithm) Train(src *entity.Training) *entity.Training {
 				ga.getTournamentSelection(src))
 		}
 
-		result.Iterations = append(result.Iterations, ga.getMutation(crossoverResult))
+		var mutationResult *entity.Iteration
+
+		switch config.GetMutationType() {
+		case config.MUTATION_INVERSION:
+			mutationResult = ga.getMutationInversion(crossoverResult)
+		case config.MUTATION_TRANSPOSITION:
+			mutationResult = ga.getMutationTransposition(crossoverResult)
+		}
+
+		result.Iterations = append(result.Iterations, mutationResult)
 	}
 
 	return result
