@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math/rand"
 	"university/generic_algorithm_project/internal/config"
 	"university/generic_algorithm_project/internal/entity"
@@ -12,36 +11,23 @@ type GeneticAlgorithm struct {
 
 func (ga *GeneticAlgorithm) getCrossover(src, dst *entity.Iteration) *entity.Iteration {
 	result := &entity.Iteration{
-		Path: src.Path,
+		Path: src.Path[:],
 	}
 
-	// Child Tour
-	// c := base.Tour{}
-	// c.InitTour(size)
-
-	// Number of crossover
 	nc := int(config.GetCrossoverProbability() * float64(len(src.Path)))
-	// Start positions of cross over for parent 1
 	sp := int(rand.Float32() * float32(len(src.Path)))
-	// End position of cross over for parent 1
 	ep := (sp + nc) % len(src.Path)
-	// Parent 2 slots
-	p2s := make([]int, 0, len(src.Path)-nc)
-	// Populate child with parent 1
+	selected := make([]int, 0, len(src.Path)-nc)
 	if sp < ep {
 		for i := 0; i < len(src.Path); i++ {
-			if i >= sp && i < ep {
-				result.Path = append(result.Path, src.Path[i])
-			} else {
-				p2s = append(p2s, i)
+			if !(i >= sp && i < ep) {
+				selected = append(selected, i)
 			}
 		}
 	} else if sp > ep {
 		for i := 0; i < len(src.Path); i++ {
-			if !(i >= ep && i < sp) {
-				result.Path = append(result.Path, src.Path[i])
-			} else {
-				p2s = append(p2s, i)
+			if i >= ep && i < sp {
+				selected = append(selected, i)
 			}
 		}
 	}
@@ -56,7 +42,7 @@ func (ga *GeneticAlgorithm) getCrossover(src, dst *entity.Iteration) *entity.Ite
 			}
 		}
 		if !exist {
-			result.Path[p2s[j]] = dst.Path[i]
+			result.Path[selected[j]] = dst.Path[i]
 			j++
 		}
 	}
@@ -96,8 +82,6 @@ func (ga *GeneticAlgorithm) Train(src *entity.Training) *entity.Training {
 	if config.IsElitism() {
 		result.Iterations = append(result.Iterations, src.GetFittest())
 	}
-
-	fmt.Println(ga.getTournamentSelection(src), ga.getTournamentSelection(src))
 
 	for i := 0; i < len(src.Iterations)-1; i++ {
 

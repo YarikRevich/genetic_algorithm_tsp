@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"university/generic_algorithm_project/internal/config"
+	"university/generic_algorithm_project/internal/core"
 	"university/generic_algorithm_project/internal/entity"
 	"university/generic_algorithm_project/internal/tools"
 
@@ -17,12 +18,17 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 	graph.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
 			Title:    "TSP",
-			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nAuthori: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType()),
+			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nGenerations: %d\n\nAuthor: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType(), config.GetGenerations()),
 		}),
 		charts.WithTooltipOpts(opts.Tooltip{
-			Trigger:   "item",
-			TriggerOn: "click",
+			Trigger:   "none",
+			TriggerOn: "none",
 			Enterable: true,
+			Show:      true,
+		}),
+		charts.WithToolboxOpts(opts.Toolbox{
+			Show:    true,
+			Feature: &opts.ToolBoxFeature{},
 		}),
 		charts.WithInitializationOpts(opts.Initialization{
 			Width:  fmt.Sprintf("%dpx", canvas.Width),
@@ -34,7 +40,7 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 }
 
 func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
-	// geneticAlgorithm := core.NewGeneticAlgorithm()
+	geneticAlgorithm := core.NewGeneticAlgorithm()
 
 	generations := config.GetGenerations()
 
@@ -45,18 +51,14 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
 			config.IsRandom(),
 		), generations)
 
-	// fmt.Println(training.Iterations)
-	for _, v := range training.Iterations {
-		fmt.Println(v.Path)
+	for i := 0; i < generations; i++ {
+		training = geneticAlgorithm.Train(training)
 	}
-
-	// for i := 0; i < generations; i++ {
-	// 	training = geneticAlgorithm.Train(training)
-	// }
 
 	var graphNodes []opts.GraphNode
 
 	iteration := training.GetFittest()
+
 	for _, v := range iteration.Path {
 		graphNodes = append(graphNodes, opts.GraphNode{
 			Name: v.Name,
@@ -66,17 +68,10 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink) {
 	}
 
 	var graphLinks []opts.GraphLink
-	for i := 0; i < len(iteration.Path); i++ {
-		var target string
-		if i+1 < len(iteration.Path) {
-			target = iteration.Path[i+1].Name
-		} else {
-			target = iteration.Path[0].Name
-		}
-
+	for i := 0; i < len(iteration.Path)-1; i++ {
 		graphLinks = append(graphLinks, opts.GraphLink{
-			Source: iteration.Path[0].Name,
-			Target: target,
+			Source: iteration.Path[i].Name,
+			Target: iteration.Path[i+1].Name,
 		})
 	}
 

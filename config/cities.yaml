@@ -1,12 +1,12 @@
 meta:
-  generations: 3
+  generations: 100
   representation: "path"
   elitism: true
   crossover: 
     probability: 0.6
     type: "OX"
   mutation:
-    probability: 0.1
+    probability: 0.4
     type: "inversion"
 data:
   - name: "Kyiv"
@@ -15,8 +15,20 @@ data:
   - name: "Zaporizhzhya"
     x: 500
     y: 400
+  - name: "Mariupol"
+    x: 200
+    y: 250
+  - name: "Lviv"
+    x: 150
+    y: 300
+  - name: "Dnipro"
+    x: 400
+    y: 350
+  - name: "Charkiv"
+    x: 450
+    y: 230
 random:
   canvas:
     width: 1000
     height: 1000
-  names: ["Kyiv", "Lviv", "Zaporizhzhya", "Dnipro", "Mariupol"]
+  names: ["Kyiv", "Lviv", "Zaporizhzhya", "Dnipro", "Mariupol", "Bakhmut", "Melitopol", "Chmelnytskyi", "Zhytomyr", "Ternopol"]
