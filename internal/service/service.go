@@ -1,29 +1,35 @@
 package service
 
 import (
+	"fmt"
 	"university/generic_algorithm_project/internal/config"
 	"university/generic_algorithm_project/internal/entity"
+
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 )
 
-// Generates graph using width and height of the canvas.
-func GenerateGraph(height, width int) *entity.Graph {
-	result := new(entity.Graph)
+func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
+	graph := charts.NewGraph()
 
-	data := config.GetData()
+	graph.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    "TSP",
+			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nAuthori: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType()),
+		}),
+		charts.WithTooltipOpts(opts.Tooltip{
+			Trigger:   "item",
+			TriggerOn: "click",
+			Enterable: true,
+		}),
+		charts.WithInitializationOpts(opts.Initialization{
+			Width:  fmt.Sprintf("%dpx", canvas.Width),
+			Height: fmt.Sprintf("%dpx", canvas.Height),
+			Theme:  types.ThemeMacarons,
+		}))
 
-	for h := 0; h < height; h++ {
-		for w := 0; w < width; w++ {
-			for _, v := range data {
-				if int(v.X) == w && int(v.Y) == h {
-
-				}
-			}
-		}
-	}
-
-	result.AddEdge(entity.Point{}, entity.Point{})
-
-	return result
+	return graph
 }
 
 func GetPathToPoint() {

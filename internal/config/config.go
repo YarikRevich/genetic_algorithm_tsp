@@ -22,7 +22,16 @@ var (
 )
 
 var (
-	data         []*entity.ConfigDataModel
+	generations          int
+	representation       string
+	elitism              bool
+	crossoverProbability float64
+	crossoverType        string
+	mutationProbability  float64
+	mutationType         string
+
+	data []*entity.ConfigDataModel
+
 	randomCanvas entity.Canvas
 	randomNames  []string
 )
@@ -36,6 +45,14 @@ func Init() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	generations = viper.GetInt("meta.generations")
+	representation = viper.GetString("meta.representation")
+	elitism = viper.GetBool("meta.elitism")
+	crossoverProbability = viper.GetFloat64("meta.crossover.probability")
+	crossoverType = viper.GetString("meta.crossover.type")
+	mutationProbability = viper.GetFloat64("meta.mutation.probability")
+	mutationType = viper.GetString("meta.mutation.type")
 
 	dataRaw, ok := viper.Get("data").([]interface{})
 	if !ok {
@@ -92,6 +109,34 @@ func GetOutput() string {
 
 func IsRandom() bool {
 	return *random
+}
+
+func GetGenerations() int {
+	return generations
+}
+
+func GetRepresentation() string {
+	return representation
+}
+
+func IsElitism() bool {
+	return elitism
+}
+
+func GetCrossoverProbability() float64 {
+	return crossoverProbability
+}
+
+func GetCrossoverType() string {
+	return crossoverType
+}
+
+func GetMutationProbability() float64 {
+	return mutationProbability
+}
+
+func GetMutationType() string {
+	return mutationType
 }
 
 func GetData() []*entity.ConfigDataModel {

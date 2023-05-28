@@ -20,38 +20,6 @@ func GetLocalServerURL(address string) string {
 	return url.String()
 }
 
-func GetRandomData(src []string, width, height int) []*entity.ConfigDataModel {
-	var result []*entity.ConfigDataModel
-
-	usedPositions := make(map[entity.Position]bool)
-	for _, v := range src {
-		ticker := time.NewTicker(time.Millisecond * 20)
-		for range ticker.C {
-			ticker.Stop()
-
-			generatedPosition := entity.Position{
-				X: float32(rand.Intn(width)),
-				Y: float32(rand.Intn(height)),
-			}
-
-			if _, ok := usedPositions[generatedPosition]; ok {
-				ticker.Reset(time.Millisecond * 20)
-				continue
-			}
-
-			result = append(result, &entity.ConfigDataModel{
-				Name: v,
-				X:    generatedPosition.X,
-				Y:    generatedPosition.Y,
-			})
-
-			break
-		}
-	}
-
-	return result
-}
-
 func GetCanvas() entity.Canvas {
 	if config.IsRandom() {
 		return config.GetRandomCanvas()
@@ -68,6 +36,47 @@ func GetCanvas() entity.Canvas {
 		if v.Y > float32(result.Height) {
 			result.Height = int(v.Y)
 		}
+	}
+
+	result.Width *= 2
+	result.Height *= 2
+
+	return result
+}
+
+func GetData(data []*entity.ConfigDataModel, randomData []string, isRandom bool) []*entity.ConfigDataModel {
+	var result []*entity.ConfigDataModel
+
+	canvas := GetCanvas()
+
+	if isRandom {
+		usedPositions := make(map[entity.Position]bool)
+		for _, v := range randomData {
+			ticker := time.NewTicker(time.Millisecond * 20)
+			for range ticker.C {
+				ticker.Stop()
+
+				generatedPosition := entity.Position{
+					X: float32(rand.Intn(canvas.Width)),
+					Y: float32(rand.Intn(canvas.Height)),
+				}
+
+				if _, ok := usedPositions[generatedPosition]; ok {
+					ticker.Reset(time.Millisecond * 20)
+					continue
+				}
+
+				result = append(result, &entity.ConfigDataModel{
+					Name: v,
+					X:    generatedPosition.X,
+					Y:    generatedPosition.Y,
+				})
+
+				break
+			}
+		}
+	} else {
+		result = data
 	}
 
 	return result
