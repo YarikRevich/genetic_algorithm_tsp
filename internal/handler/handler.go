@@ -7,29 +7,42 @@ import (
 	"university/generic_algorithm_project/internal/tools"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
 )
 
 func GetResult(w http.ResponseWriter, r *http.Request) {
+	page := components.NewPage()
+
+	// grid.SetGlobalOptions(
+	// 	charts.WithGridOpts(opts.Grid{Width: "50%"}),
+	// )
+
 	graphRenderer := service.GetGraphRenderer(tools.GetCanvas())
 
 	graphNodes, graphLinks := service.GetGraphSeries()
-	graphRenderer.AddSeries("Cities", graphNodes, graphLinks, charts.WithGraphChartOpts(opts.GraphChart{
-		Layout: "none",
-		Roam:   true,
-		EdgeLabel: &opts.EdgeLabel{
-			Show: true,
-		},
-	}))
+	graphRenderer.AddSeries("Cities", graphNodes, graphLinks, charts.WithGraphChartOpts(
+		opts.GraphChart{
+			Layout: "none",
+			Roam:   true,
+			EdgeLabel: &opts.EdgeLabel{
+				Show: true,
+			},
+		}))
 
-	graphRenderer.AddJSFuncs(`function handleButtonClick() { alert('Custom button clicked!'); }`)
+	err := graphRenderer.Render(service.GetOutputWriter())
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	graphRenderer.AddCustomizedJSAssets(`var button = document.createElement("button");
-	button.innerHTML = "Custom Button";
-	button.addEventListener("click", handleButtonClick);
-	document.body.appendChild(button);`)
+	page.AddCharts(graphRenderer)
 
-	err := graphRenderer.Render(w)
+	gaugeRenderer := service.GetGaugeRenderer()
+	gaugeRenderer.AddSeries("Training result", service.GetGaugeSeries(100))
+
+	page.AddCharts(gaugeRenderer)
+
+	err = page.Render(w)
 	if err != nil {
 		log.Fatalln(err)
 	}

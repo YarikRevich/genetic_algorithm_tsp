@@ -6,10 +6,17 @@ import (
 	"university/generic_algorithm_project/internal/entity"
 )
 
-type GeneticAlgorithm struct {
+type GeneticAlgorithm struct{}
+
+func (ga *GeneticAlgorithm) getCrossoverOX(src, dst *entity.Iteration) *entity.Iteration {
+	return nil
 }
 
-func (ga *GeneticAlgorithm) getCrossover(src, dst *entity.Iteration) *entity.Iteration {
+func (ga *GeneticAlgorithm) getCrossoverCX(src, dst *entity.Iteration) *entity.Iteration {
+	return nil
+}
+
+func (ga *GeneticAlgorithm) getCrossoverPBC(src, dst *entity.Iteration) *entity.Iteration {
 	result := &entity.Iteration{
 		Path: src.Path[:],
 	}
@@ -84,11 +91,24 @@ func (ga *GeneticAlgorithm) Train(src *entity.Training) *entity.Training {
 	}
 
 	for i := 0; i < len(src.Iterations)-1; i++ {
+		var crossoverResult *entity.Iteration
 
-		mutation := ga.getMutation(ga.getCrossover(
-			ga.getTournamentSelection(src),
-			ga.getTournamentSelection(src)))
-		result.Iterations = append(result.Iterations, mutation)
+		switch config.GetCrossoverType() {
+		case config.CROSSOVER_OX:
+			crossoverResult = ga.getCrossoverOX(
+				ga.getTournamentSelection(src),
+				ga.getTournamentSelection(src))
+		case config.CROSSOVER_CX:
+			crossoverResult = ga.getCrossoverCX(
+				ga.getTournamentSelection(src),
+				ga.getTournamentSelection(src))
+		case config.CROSSOVER_PBC:
+			crossoverResult = ga.getCrossoverPBC(
+				ga.getTournamentSelection(src),
+				ga.getTournamentSelection(src))
+		}
+
+		result.Iterations = append(result.Iterations, ga.getMutation(crossoverResult))
 	}
 
 	return result

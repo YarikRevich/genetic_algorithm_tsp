@@ -4,10 +4,14 @@ meta:
   elitism: true
   crossover: 
     probability: 0.6
-    type: "OX"
+    type: "PBC"
   mutation:
     probability: 0.4
     type: "inversion"
+  view:
+    history: 
+      show: true
+      delay: 500ms
 data:
   - name: "Kyiv"
     x: 100

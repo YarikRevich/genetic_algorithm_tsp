@@ -1,23 +1,26 @@
 package config
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"time"
 	"university/generic_algorithm_project/internal/entity"
 
 	"github.com/0chain/common/core/viper"
+	"github.com/pkg/errors"
 )
 
 var (
-	ConfigFieldNotFound  = errors.New("err happened during config field retrieval")
-	ConfigFieldWrongType = errors.New("err happened during config field conversion")
+	ConfigFieldNotFound       = errors.New("err happened during config field retrieval")
+	ConfigFieldWrongType      = errors.New("err happened during config field conversion")
+	ConfigWrongParameterValue = errors.New("err happened during parameter value check")
 )
 
 var (
 	configFile = flag.String("configFile", "./config/cities.yaml", "Describes a config file used for TSP algorithm")
 	random     = flag.Bool("random", false, "Enables random data generation")
+	cities     = flag.Int("cities", 10, "Describes the number of cities used to generate when random data generation is enabled")
 	output     = flag.String("output", "output.html", "Describes the path of the output")
 )
 
@@ -29,11 +32,19 @@ var (
 	crossoverType        string
 	mutationProbability  float64
 	mutationType         string
+	showHistory          bool
+	historyDelay         time.Duration
 
 	data []*entity.ConfigDataModel
 
 	randomCanvas entity.Canvas
 	randomNames  []string
+)
+
+const (
+	CROSSOVER_OX  = "OX"
+	CROSSOVER_CX  = "CX"
+	CROSSOVER_PBC = "PBC"
 )
 
 const RESULT_PATH = "/"
@@ -47,12 +58,33 @@ func Init() {
 	}
 
 	generations = viper.GetInt("meta.generations")
+	if generations == 0 {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.generations"))
+	}
+
 	representation = viper.GetString("meta.representation")
 	elitism = viper.GetBool("meta.elitism")
 	crossoverProbability = viper.GetFloat64("meta.crossover.probability")
+	if crossoverProbability == 0 {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.crossover.probability"))
+	}
+
 	crossoverType = viper.GetString("meta.crossover.type")
+	if crossoverType != CROSSOVER_OX && crossoverType != CROSSOVER_CX && crossoverType != CROSSOVER_PBC {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.crossover.type"))
+	}
+
 	mutationProbability = viper.GetFloat64("meta.mutation.probability")
+	if mutationProbability == 0 {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.mutation.probability"))
+	}
+
 	mutationType = viper.GetString("meta.mutation.type")
+	showHistory = viper.GetBool("meta.view.history.show")
+	historyDelay = viper.GetDuration("meta.view.history.delay")
+	if showHistory && historyDelay == 0 {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "meta.view.history.delay"))
+	}
 
 	dataRaw, ok := viper.Get("data").([]interface{})
 	if !ok {
@@ -101,6 +133,9 @@ func Init() {
 	randomCanvas.Height = heightInt
 
 	randomNames = viper.GetStringSlice("random.names")
+	if *cities > len(randomNames) {
+		log.Fatalln(errors.Wrap(ConfigWrongParameterValue, "cities number is bigger than the number of available cities"))
+	}
 }
 
 func GetOutput() string {
@@ -109,6 +144,10 @@ func GetOutput() string {
 
 func IsRandom() bool {
 	return *random
+}
+
+func GetCities() int {
+	return *cities
 }
 
 func GetGenerations() int {
@@ -149,4 +188,12 @@ func GetRandomCanvas() entity.Canvas {
 
 func GetRandomNames() []string {
 	return randomNames
+}
+
+func IsShowHistory() bool {
+	return showHistory
+}
+
+func GetHistoryDelay() time.Duration {
+	return historyDelay
 }
