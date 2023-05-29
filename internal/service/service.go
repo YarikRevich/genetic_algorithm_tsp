@@ -2,14 +2,10 @@ package service
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 	"university/generic_algorithm_project/internal/config"
-	"university/generic_algorithm_project/internal/core"
 	"university/generic_algorithm_project/internal/entity"
+	"university/generic_algorithm_project/internal/genetic"
+	"university/generic_algorithm_project/internal/history"
 	"university/generic_algorithm_project/internal/tools"
 
 	"github.com/barkimedes/go-deepcopy"
@@ -43,15 +39,6 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 			Theme:     types.ThemeMacarons,
 		}))
 
-	graph.SetSeriesOptions(charts.WithGraphChartOpts(
-		opts.GraphChart{
-			Layout: "none",
-			Roam:   true,
-			EdgeLabel: &opts.EdgeLabel{
-				Show: true,
-			},
-		}))
-
 	// graph.AddJSFuncs(`
 	// function handleButtonClick()
 	// { alert('Custom button clicked!');};
@@ -65,9 +52,11 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 }
 
 func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
-	geneticAlgorithm := core.NewGeneticAlgorithm()
+	geneticAlgorithm := genetic.NewGeneticAlgorithm()
 
 	generations := config.GetGenerations()
+
+	distanceHistoryTracker := history.NewDistanceHistoryTracker()
 
 	bestTraining := entity.NewTrainingWithGeneration(
 		tools.GetData(
@@ -89,6 +78,11 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
 		if bestTraining.GetFittest().GetFitness() < training.GetFittest().GetFitness() {
 			bestTraining = deepcopy.MustAnything(training).(*entity.Training)
 		}
+
+		distanceHistoryTracker.AddRecord(entity.DistanceHistoryRecord{
+			Distance:   bestTraining.GetWithLowestDistance().GetDistance(),
+			Population: i * bestTraining.GetIterationSize(),
+		})
 	}
 
 	var graphNodes []opts.GraphNode
@@ -115,7 +109,20 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
 }
 
 func GetBarRenderer(canvas entity.Canvas) *charts.Bar {
-	return nil
+	bar := charts.NewBar()
+
+	bar.AddSeries("test", []opts.BarData{
+		{
+			Name:  "it works",
+			Value: 100,
+		},
+		{
+			Name:  "it works",
+			Value: 200,
+		},
+	})
+
+	return bar
 }
 
 func GetGaugeRenderer() *charts.Gauge {
@@ -125,32 +132,6 @@ func GetGaugeRenderer() *charts.Gauge {
 func GetGaugeSeries(fitness float64) []opts.GaugeData {
 	return []opts.GaugeData{{
 		Name:  "Best fitness",
-		Value: fitness * 100000,
+		Value: fmt.Sprintf("%.3f", fitness*100000),
 	}}
-}
-
-func GetOutputWriter() *os.File {
-	file, err := os.OpenFile(config.GetOutput(), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	exitCh := make(chan os.Signal, 1)
-	signal.Notify(exitCh, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		ticker := time.NewTicker(time.Millisecond * 500)
-		for range ticker.C {
-			select {
-			case <-exitCh:
-				err = file.Close()
-				if err != nil {
-					log.Fatalln(err)
-				}
-			default:
-			}
-		}
-	}()
-
-	return file
 }

@@ -88,6 +88,32 @@ func GetData(data []*entity.ConfigDataModel, randomData []string, isRandom bool)
 	return result
 }
 
+func GetOutputWriter() *os.File {
+	file, err := os.OpenFile(config.GetOutput(), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	exitCh := make(chan os.Signal, 1)
+	signal.Notify(exitCh, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		ticker := time.NewTicker(time.Millisecond * 500)
+		for range ticker.C {
+			select {
+			case <-exitCh:
+				err = file.Close()
+				if err != nil {
+					log.Fatalln(err)
+				}
+			default:
+			}
+		}
+	}()
+
+	return file
+}
+
 func WaitForExit() {
 	log.Println("Press 'Ctrl+C' to stop")
 

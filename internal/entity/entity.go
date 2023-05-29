@@ -68,7 +68,7 @@ type Iteration struct {
 	Path []Point
 }
 
-func (it Iteration) GetFitness() float64 {
+func (it *Iteration) GetDistance() float64 {
 	var distance float64
 	for i := 0; i < len(it.Path); i++ {
 		src := it.Path[i]
@@ -91,12 +91,27 @@ func (it Iteration) GetFitness() float64 {
 
 		distance += math.Sqrt((distanceX * distanceX) + (distanceY * distanceY))
 	}
+	return distance
+}
 
-	return 1 / distance
+func (it *Iteration) GetFitness() float64 {
+	return 1 / it.GetDistance()
 }
 
 type Training struct {
 	Iterations []*Iteration
+}
+
+func (t *Training) GetWithLowestDistance() *Iteration {
+	result := t.Iterations[0]
+
+	for _, iteration := range t.Iterations {
+		if iteration.GetDistance() < result.GetDistance() {
+			result = iteration
+		}
+	}
+
+	return result
 }
 
 func (t *Training) GetFittest() *Iteration {
@@ -109,6 +124,10 @@ func (t *Training) GetFittest() *Iteration {
 	}
 
 	return result
+}
+
+func (t *Training) GetIterationSize() int {
+	return len(t.Iterations[0].Path)
 }
 
 func NewTrainingWithGeneration(src []*ConfigDataModel) *Training {
@@ -137,4 +156,9 @@ func NewTrainingWithGeneration(src []*ConfigDataModel) *Training {
 
 func NewTraining() *Training {
 	return new(Training)
+}
+
+type DistanceHistoryRecord struct {
+	Distance   float64
+	Population int
 }

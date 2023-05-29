@@ -12,12 +12,6 @@ import (
 )
 
 func GetResult(w http.ResponseWriter, r *http.Request) {
-	page := components.NewPage()
-
-	// grid.SetGlobalOptions(
-	// 	charts.WithGridOpts(opts.Grid{Width: "50%"}),
-	// )
-
 	graphRenderer := service.GetGraphRenderer(tools.GetCanvas())
 
 	graphNodes, graphLinks, fitness := service.GetGraphSeries()
@@ -30,17 +24,31 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 			},
 		}))
 
-	err := graphRenderer.Render(service.GetOutputWriter())
+	err := graphRenderer.Render(tools.GetOutputWriter())
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	page.AddCharts(graphRenderer)
+	err = graphRenderer.Render(w)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	page := components.NewPage()
 
 	gaugeRenderer := service.GetGaugeRenderer()
+	gaugeRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
+		Left: "50%",
+	}))
 	gaugeRenderer.AddSeries("Training result", service.GetGaugeSeries(fitness))
 
 	page.AddCharts(gaugeRenderer)
+
+	barRenderer := service.GetBarRenderer(tools.GetCanvas())
+	barRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
+		Right: "50%",
+	}))
+	page.AddCharts(barRenderer)
 
 	err = page.Render(w)
 	if err != nil {
