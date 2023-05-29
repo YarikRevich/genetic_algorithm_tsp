@@ -14,7 +14,7 @@ import (
 func GetResult(w http.ResponseWriter, r *http.Request) {
 	graphRenderer := service.GetGraphRenderer(tools.GetCanvas())
 
-	graphNodes, graphLinks, fitness := service.GetGraphSeries()
+	graphNodes, graphLinks, fitness, distanceHistoryTracker := service.GetGraphSeries()
 	graphRenderer.AddSeries("Cities", graphNodes, graphLinks, charts.WithGraphChartOpts(
 		opts.GraphChart{
 			Layout: "none",
@@ -44,11 +44,13 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 
 	page.AddCharts(gaugeRenderer)
 
-	barRenderer := service.GetBarRenderer(tools.GetCanvas())
-	barRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
+	lineRenderer := service.GetLineRenderer(tools.GetCanvas())
+	lineRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
 		Right: "50%",
 	}))
-	page.AddCharts(barRenderer)
+	lineRenderer.AddSeries("Test", service.GetLineSeries(distanceHistoryTracker))
+
+	page.AddCharts(lineRenderer)
 
 	err = page.Render(w)
 	if err != nil {

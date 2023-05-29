@@ -51,7 +51,7 @@ func GetGraphRenderer(canvas entity.Canvas) *charts.Graph {
 	return graph
 }
 
-func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
+func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64, *history.DistanceHistoryTracker) {
 	geneticAlgorithm := genetic.NewGeneticAlgorithm()
 
 	generations := config.GetGenerations()
@@ -80,8 +80,8 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
 		}
 
 		distanceHistoryTracker.AddRecord(entity.DistanceHistoryRecord{
-			Distance:   bestTraining.GetWithLowestDistance().GetDistance(),
-			Population: i * bestTraining.GetIterationSize(),
+			Distance:   training.GetWithLowestDistance().GetDistance(),
+			Population: i * training.GetIterationSize(),
 		})
 	}
 
@@ -105,24 +105,23 @@ func GetGraphSeries() ([]opts.GraphNode, []opts.GraphLink, float64) {
 		})
 	}
 
-	return graphNodes, graphLinks, iteration.GetFitness()
+	return graphNodes, graphLinks, iteration.GetFitness(), distanceHistoryTracker
 }
 
-func GetBarRenderer(canvas entity.Canvas) *charts.Bar {
-	bar := charts.NewBar()
+func GetLineRenderer(canvas entity.Canvas) *charts.Line {
+	return charts.NewLine()
+}
 
-	bar.AddSeries("test", []opts.BarData{
-		{
-			Name:  "it works",
-			Value: 100,
-		},
-		{
-			Name:  "it works",
-			Value: 200,
-		},
-	})
+func GetLineSeries(distanceHistoryTracker *history.DistanceHistoryTracker) []opts.LineData {
+	var result []opts.LineData
 
-	return bar
+	for _, v := range distanceHistoryTracker.GetAllOrdered() {
+		result = append(result, opts.LineData{
+			Value: []float64{v.Distance, float64(v.Population)},
+		})
+	}
+
+	return result
 }
 
 func GetGaugeRenderer() *charts.Gauge {

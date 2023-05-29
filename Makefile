@@ -8,7 +8,3 @@ help:
 .PHONY: build
 build: ## Build the project
 	@go build -o $(output) ./cmd/...
-
-.PHONY: install
-install: build ## Install the project to the system directory
-
