@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math"
 	"math/rand"
+
+	"github.com/go-echarts/go-echarts/v2/opts"
 )
 
 var VertexNotFound = errors.New("err happened during vertex retrieval")
@@ -17,17 +19,11 @@ type Canvas struct {
 	Width, Height int
 }
 
-const (
-	NONE = iota
-	CITY
-)
-
 type Position struct {
 	X, Y float32
 }
 
 type Point struct {
-	Type int
 	Name string
 	Position
 }
@@ -161,4 +157,11 @@ func NewTraining() *Training {
 type DistanceHistoryRecord struct {
 	Distance   float64
 	Population int
+}
+
+type GetGraphSeriesResponse struct {
+	GraphNodes     []opts.GraphNode
+	GraphLinks     []opts.GraphLink
+	Fitness        float64
+	HistoryRecords []DistanceHistoryRecord
 }

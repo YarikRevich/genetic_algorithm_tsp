@@ -1,5 +1,5 @@
 meta:
-  generations: 2000
+  generations: 100
   representation: "path"
   elitism: true
   crossover: 

@@ -1,28 +1,58 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"university/generic_algorithm_project/internal/service"
+	"university/generic_algorithm_project/internal/config"
+	"university/generic_algorithm_project/internal/graph"
 	"university/generic_algorithm_project/internal/tools"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 )
 
 func GetResult(w http.ResponseWriter, r *http.Request) {
-	graphRenderer := service.GetGraphRenderer(tools.GetCanvas())
+	canvas := tools.GetCanvas()
 
-	graphNodes, graphLinks, fitness, distanceHistoryTracker := service.GetGraphSeries()
-	graphRenderer.AddSeries("Cities", graphNodes, graphLinks, charts.WithGraphChartOpts(
-		opts.GraphChart{
-			Layout: "none",
-			Roam:   true,
-			EdgeLabel: &opts.EdgeLabel{
-				Show: true,
-			},
+	graphRenderer := charts.NewGraph()
+
+	graphRenderer.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    "TSP",
+			Subtitle: fmt.Sprintf("Width: %dpx\n\nHeight: %dpx\n\nCrossover probability: %.2f\n\nCrossover type: %s\n\nMutation probability: %.2f\n\nMutation type: %s\n\nGenerations: %d\n\nRandom seek: %d\n\nAuthor: Yaroslav Svitlytskyi", canvas.Width, canvas.Height, config.GetCrossoverProbability(), config.GetCrossoverType(), config.GetMutationProbability(), config.GetMutationType(), config.GetGenerations(), tools.GetRandSeed()),
+		}),
+		charts.WithTooltipOpts(opts.Tooltip{
+			Trigger:   "none",
+			TriggerOn: "none",
+			Enterable: true,
+			Show:      true,
+		}),
+		charts.WithToolboxOpts(opts.Toolbox{
+			Show:    true,
+			Feature: &opts.ToolBoxFeature{},
+		}),
+		charts.WithInitializationOpts(opts.Initialization{
+			PageTitle: "TSP",
+			Width:     fmt.Sprintf("%dpx", canvas.Width),
+			Height:    fmt.Sprintf("%dpx", canvas.Height),
+			Theme:     types.ThemeMacarons,
 		}))
+
+	getGraphSeriesResponse := graph.GetGraphSeries()
+	graphRenderer.AddSeries(
+		"Cities",
+		getGraphSeriesResponse.GraphNodes,
+		getGraphSeriesResponse.GraphLinks,
+		charts.WithGraphChartOpts(
+			opts.GraphChart{
+				Layout: "none",
+				Roam:   true,
+				EdgeLabel: &opts.EdgeLabel{
+					Show: true,
+				},
+			}))
 
 	err := graphRenderer.Render(tools.GetOutputWriter())
 	if err != nil {
@@ -34,25 +64,26 @@ func GetResult(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	}
 
-	page := components.NewPage()
+	gaugeRenderer := charts.NewGauge()
+	gaugeRenderer.AddSeries(
+		"Training result",
+		graph.GetGaugeSeries(getGraphSeriesResponse.Fitness))
 
-	gaugeRenderer := service.GetGaugeRenderer()
-	gaugeRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
-		Left: "50%",
-	}))
-	gaugeRenderer.AddSeries("Training result", service.GetGaugeSeries(fitness))
+	err = gaugeRenderer.Render(w)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	page.AddCharts(gaugeRenderer)
+	lineRenderer := charts.NewLine()
+	lineRenderer.AddSeries(
+		"Distance history",
+		graph.GetLineSeries(getGraphSeriesResponse.HistoryRecords),
+		charts.WithLineChartOpts(
+			opts.LineChart{
+				Step: "start",
+			}))
 
-	lineRenderer := service.GetLineRenderer(tools.GetCanvas())
-	lineRenderer.SetGlobalOptions(charts.WithGridOpts(opts.Grid{
-		Right: "50%",
-	}))
-	lineRenderer.AddSeries("Test", service.GetLineSeries(distanceHistoryTracker))
-
-	page.AddCharts(lineRenderer)
-
-	err = page.Render(w)
+	err = lineRenderer.Render(w)
 	if err != nil {
 		log.Fatalln(err)
 	}
