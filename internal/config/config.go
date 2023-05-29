@@ -18,7 +18,7 @@ var (
 )
 
 var (
-	configFile = flag.String("configFile", "./config/cities.yaml", "Describes a config file used for TSP algorithm")
+	configFile = flag.String("configFile", "./config/config.yaml", "Describes a config file used for TSP algorithm")
 	random     = flag.Bool("random", false, "Enables random data generation")
 	cities     = flag.Int("cities", 10, "Describes the number of cities used to generate when random data generation is enabled")
 	output     = flag.String("output", "output.html", "Describes the path of the output")
