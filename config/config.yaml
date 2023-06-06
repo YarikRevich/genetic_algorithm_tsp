@@ -1,13 +1,13 @@
 meta:
-  generations: 100
+  generations: 1000
   representation: "path"
   elitism: true
   crossover: 
     probability: 0.6
-    type: "OX"
+    type: "PBC"
   mutation:
-    probability: 0.1
-    type: "inversion"
+    probability: 0.2
+    type: "transposition"
   view:
     history: 
       show: true
@@ -31,6 +31,18 @@ data:
   - name: "Charkiv"
     x: 450
     y: 230
+  - name: "Ternopil"
+    x: 350
+    y: 440
+  - name: "New York"
+    x: 350
+    y: 120
+  - name: "Irpin"
+    x: 40
+    y: 140
+  - name: "Enerhodar"
+    x: 490
+    y: 190
 random:
   canvas:
     width: 1000
